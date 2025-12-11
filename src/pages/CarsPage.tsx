@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Car } from '@/types';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { CarCard } from '@/components/CarCard';
 import { SearchFiltersComponent } from '@/components/SearchFilters';
-import { mockCars } from '@/data/mockData';
 import { SearchFilters } from '@/types';
 import { Grid3X3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,30 +20,52 @@ export function CarsPage({ user, onLogout }: CarsPageProps) {
   const [filters, setFilters] = useState<SearchFilters>({});
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const filteredCars = useMemo(() => {
-    return mockCars.filter((car) => {
-      if (filters.brand && car.brand !== filters.brand) return false;
-      if (filters.type && car.type !== filters.type) return false;
-      if (filters.fuelType && car.fuelType !== filters.fuelType) return false;
-      if (filters.seats && car.seats < filters.seats) return false;
-      if (filters.minPrice && car.pricePerDay < filters.minPrice) return false;
-      if (filters.maxPrice && car.pricePerDay > filters.maxPrice) return false;
-      return true;
-    });
-  }, [filters]);
+  const { data: cars = [], isLoading } = useQuery({
+    queryKey: ['cars', filters],
+    queryFn: async () => {
+      let query = supabase.from('cars').select('*');
+
+      if (filters.brand) query = query.eq('brand', filters.brand);
+      if (filters.type) query = query.eq('type', filters.type);
+      if (filters.fuelType) query = query.eq('fuel_type', filters.fuelType);
+      if (filters.seats) query = query.gte('seats', filters.seats);
+      if (filters.minPrice) query = query.gte('price_per_day', filters.minPrice);
+      if (filters.maxPrice) query = query.lte('price_per_day', filters.maxPrice);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching cars:', error);
+        return [];
+      }
+
+      // Transform snake_case to camelCase and ensure types match
+      return (data || []).map(car => ({
+        ...car,
+        fuelType: car.fuel_type,
+        pricePerDay: Number(car.price_per_day),
+        status: car.status as any,
+        transmission: car.transmission as any,
+        features: car.features || [],
+        images: car.images || [],
+        rating: Number(car.rating || 0),
+        id: car.id
+      })) as Car[];
+    }
+  });
 
   const resetFilters = () => setFilters({});
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar user={user} onLogout={onLogout} />
-      
-      <main className="flex-1 py-8">
+
+      <main className="flex-1 py-12 pt-32 bg-muted/30">
         <div className="container">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Browse Our Fleet</h1>
             <p className="text-muted-foreground">
-              {filteredCars.length} vehicles available
+              {cars.length} vehicles available
             </p>
           </div>
 
@@ -61,7 +85,7 @@ export function CarsPage({ user, onLogout }: CarsPageProps) {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-6">
                 <p className="text-sm text-muted-foreground">
-                  Showing {filteredCars.length} of {mockCars.length} cars
+                  Showing {cars.length} of {cars.length} cars
                 </p>
                 <div className="flex items-center gap-2">
                   <Button
@@ -81,7 +105,9 @@ export function CarsPage({ user, onLogout }: CarsPageProps) {
                 </div>
               </div>
 
-              {filteredCars.length === 0 ? (
+              {isLoading ? (
+                <div className="text-center py-16">Loading cars...</div>
+              ) : cars.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="text-lg font-medium mb-2">No cars found</p>
                   <p className="text-muted-foreground mb-4">
@@ -94,11 +120,11 @@ export function CarsPage({ user, onLogout }: CarsPageProps) {
               ) : (
                 <div className={cn(
                   "grid gap-6",
-                  viewMode === 'grid' 
-                    ? "sm:grid-cols-2 xl:grid-cols-3" 
+                  viewMode === 'grid'
+                    ? "sm:grid-cols-2 xl:grid-cols-3"
                     : "grid-cols-1"
                 )}>
-                  {filteredCars.map((car) => (
+                  {cars.map((car) => (
                     <CarCard key={car.id} car={car} />
                   ))}
                 </div>

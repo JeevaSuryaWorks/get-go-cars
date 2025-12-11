@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +19,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import {
   Dialog,
@@ -24,16 +27,16 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import { mockCars } from '@/data/mockData';
 import {
-  Car, Plus, Search, MoreVertical, Edit, Trash2, 
-  LogOut, LayoutDashboard, CarFront, ClipboardList, 
-  UserCog, BarChart3, Menu, Eye
+  Car, Plus, Search, MoreVertical, Edit, Trash2,
+  Eye, Database
 } from 'lucide-react';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { Car as CarType } from '@/types';
+import { seedCars } from '@/utils/seedData';
 
 interface AdminCarsPageProps {
   user?: { name: string; role: 'customer' | 'admin' } | null;
@@ -42,208 +45,236 @@ interface AdminCarsPageProps {
 
 export function AdminCarsPage({ user, onLogout }: AdminCarsPageProps) {
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const queryClient = useQueryClient();
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Keeping for now if used elsewhere, but actually it was only used for sidebar which we are removing.
+  // Wait, I should remove it.
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedCar, setSelectedCar] = useState<typeof mockCars[0] | null>(null);
+  const [selectedCar, setSelectedCar] = useState<CarType | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
 
-  const sidebarLinks = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
-    { icon: CarFront, label: 'Cars', path: '/admin/cars' },
-    { icon: ClipboardList, label: 'Bookings', path: '/admin/bookings' },
-    { icon: UserCog, label: 'Users', path: '/admin/users' },
-    { icon: BarChart3, label: 'Reports', path: '/admin/reports' },
-  ];
+  // Fetch Cars
+  const { data: cars = [], isLoading } = useQuery({
+    queryKey: ['admin-cars'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const isActive = (path: string) => location.pathname === path;
+      if (error) throw error;
 
-  const filteredCars = mockCars.filter(
+      // Transform data to match CarType
+      return data.map((car: any) => ({
+        ...car,
+        pricePerDay: car.price_per_day,
+        fuelType: car.fuel_type,
+        images: car.images || [],
+        features: car.features || []
+      })) as CarType[];
+    }
+  });
+
+  // Delete Car Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (carId: string) => {
+      const { error } = await supabase
+        .from('cars')
+        .delete()
+        .eq('id', carId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-cars'] });
+      toast({
+        title: "Car deleted",
+        description: `${selectedCar?.brand} ${selectedCar?.model} has been removed.`,
+      });
+      setDeleteDialogOpen(false);
+      setSelectedCar(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error deleting car",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSeedData = async () => {
+    setIsSeeding(true);
+    try {
+      await seedCars();
+      queryClient.invalidateQueries({ queryKey: ['admin-cars'] });
+      toast({
+        title: "Data Seeded",
+        description: "Successfully added 100 sample cars.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to seed data.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  const filteredCars = cars.filter(
     (car) =>
       car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
       car.model.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDelete = () => {
-    toast({
-      title: "Car deleted",
-      description: `${selectedCar?.brand} ${selectedCar?.model} has been removed.`,
-    });
-    setDeleteDialogOpen(false);
-    setSelectedCar(null);
+    if (selectedCar) {
+      deleteMutation.mutate(selectedCar.id);
+    }
   };
 
   return (
-    <div className="min-h-screen flex bg-muted/30">
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col bg-primary text-primary-foreground transition-all duration-300 lg:relative",
-          sidebarOpen ? "w-64" : "w-0 lg:w-20"
-        )}
-      >
-        <div className="flex h-16 items-center justify-between px-4 border-b border-primary-foreground/10">
-          {sidebarOpen && (
-            <Link to="/admin" className="flex items-center gap-2 font-bold text-lg">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary">
-                <Car className="h-5 w-5 text-secondary-foreground" />
-              </div>
-              <span>DriveElite</span>
-            </Link>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-primary-foreground hover:bg-primary-foreground/10"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            <Menu className="h-5 w-5" />
+    <AdminLayout
+      title="Car Management"
+      subtitle={`${cars.length} total cars`}
+      user={user}
+      onLogout={onLogout}
+      actions={
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={handleSeedData} disabled={isSeeding}>
+            <Database className="h-4 w-4 mr-2" />
+            {isSeeding ? 'Seeding...' : 'Seed Data (100)'}
           </Button>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2">
-          {sidebarLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
-                isActive(link.path)
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
-              )}
-            >
-              <link.icon className="h-5 w-5 shrink-0" />
-              {sidebarOpen && <span>{link.label}</span>}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-primary-foreground/10">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10"
-            onClick={onLogout}
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            {sidebarOpen && <span>Logout</span>}
-          </Button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 min-h-screen">
-        <header className="sticky top-0 z-40 h-16 flex items-center justify-between px-6 bg-background border-b border-border">
-          <div>
-            <h1 className="text-xl font-semibold">Car Management</h1>
-            <p className="text-sm text-muted-foreground">{mockCars.length} total cars</p>
-          </div>
-          <Button variant="secondary" asChild>
+          <Button variant="default" className="bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/20 transition-all" asChild>
             <Link to="/admin/cars/new">
               <Plus className="h-4 w-4 mr-2" />
               Add Car
             </Link>
           </Button>
-        </header>
-
-        <div className="p-6">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <CardTitle>Fleet Inventory</CardTitle>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search cars..."
-                    className="pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Car</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Price/Day</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCars.map((car) => (
-                    <TableRow key={car.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-16 h-12 rounded bg-muted overflow-hidden">
+        </div>
+      }
+    >
+      <Card className="border-border/50 shadow-lg bg-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row gap-4 justify-between">
+            <CardTitle>Fleet Inventory</CardTitle>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search cars..."
+                className="pl-9 bg-background/50 border-input/50 focus:bg-background transition-colors"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-primary/20">
+                <TableHead>Car</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Price/Day</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    Loading cars...
+                  </TableCell>
+                </TableRow>
+              ) : filteredCars.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    No cars found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredCars.map((car) => (
+                  <TableRow key={car.id} className="hover:bg-primary/5 border-border/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-16 h-12 rounded bg-muted overflow-hidden">
+                          {car.images[0] ? (
                             <img
                               src={car.images[0]}
                               alt={car.model}
                               className="w-full h-full object-cover"
                             />
-                          </div>
-                          <div>
-                            <p className="font-medium">{car.brand}</p>
-                            <p className="text-sm text-muted-foreground">{car.model} ({car.year})</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="capitalize">{car.type}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "capitalize",
-                            car.status === 'available' && "bg-success/10 text-success border-success/20",
-                            car.status === 'rented' && "bg-warning/10 text-warning border-warning/20",
-                            car.status === 'maintenance' && "bg-destructive/10 text-destructive border-destructive/20"
+                          ) : (
+                            <div className="w-full h-full bg-slate-200" />
                           )}
-                        >
-                          {car.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>${car.pricePerDay}</TableCell>
-                      <TableCell>{car.rating}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                        </div>
+                        <div>
+                          <p className="font-medium">{car.brand}</p>
+                          <p className="text-sm text-muted-foreground">{car.model} ({car.year})</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="capitalize">{car.type}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "capitalize",
+                          car.status === 'available' && "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+                          car.status === 'rented' && "bg-amber-500/10 text-amber-500 border-amber-500/20",
+                          car.status === 'maintenance' && "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                        )}
+                      >
+                        {car.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>₹{car.pricePerDay}</TableCell>
+                    <TableCell>{car.rating}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link to={`/cars/${car.id}`}>
                               <Eye className="h-4 w-4 mr-2" />
                               View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/admin/cars/${car.id}/edit`}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => {
-                                setSelectedCar(car);
-                                setDeleteDialogOpen(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => {
+                              setSelectedCar(car);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -251,7 +282,7 @@ export function AdminCarsPage({ user, onLogout }: AdminCarsPageProps) {
           <DialogHeader>
             <DialogTitle>Delete Car</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete {selectedCar?.brand} {selectedCar?.model}? 
+              Are you sure you want to delete {selectedCar?.brand} {selectedCar?.model}?
               This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
@@ -259,12 +290,16 @@ export function AdminCarsPage({ user, onLogout }: AdminCarsPageProps) {
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminLayout>
   );
 }

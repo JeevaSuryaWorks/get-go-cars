@@ -46,6 +46,9 @@ export interface Booking {
   endDate: Date;
   totalPrice: number;
   status: BookingStatus;
+  cancellationReason?: string;
+  rating?: number;
+  review?: string;
   addons: Addon[];
   createdAt: Date;
 }

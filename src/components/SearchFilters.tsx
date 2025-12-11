@@ -5,13 +5,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Search, X } from 'lucide-react';
-import { carBrands, carTypes, fuelTypes } from '@/data/mockData';
 
 interface SearchFiltersProps {
   filters: SearchFilters;
   onFiltersChange: (filters: SearchFilters) => void;
   onReset: () => void;
 }
+
+// Static data for filters
+const carBrands = ['Toyota', 'BMW', 'Mercedes', 'Audi', 'Tesla', 'Ford', 'Honda', 'Nissan'];
+const carTypes = ['Sedan', 'SUV', 'Luxury', 'Sports', 'Electric', 'Hybrid'];
+const fuelTypes = ['Gasoline', 'Diesel', 'Electric', 'Hybrid'];
 
 export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: SearchFiltersProps) {
   const updateFilter = <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
@@ -39,14 +43,14 @@ export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: Se
         <div className="space-y-2">
           <Label htmlFor="brand">Brand</Label>
           <Select
-            value={filters.brand || ''}
-            onValueChange={(value) => updateFilter('brand', value || undefined)}
+            value={filters.brand || 'all'}
+            onValueChange={(value) => updateFilter('brand', value === 'all' ? undefined : value)}
           >
             <SelectTrigger id="brand">
               <SelectValue placeholder="All Brands" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Brands</SelectItem>
+              <SelectItem value="all">All Brands</SelectItem>
               {carBrands.map((brand) => (
                 <SelectItem key={brand} value={brand}>{brand}</SelectItem>
               ))}
@@ -57,14 +61,14 @@ export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: Se
         <div className="space-y-2">
           <Label htmlFor="type">Car Type</Label>
           <Select
-            value={filters.type || ''}
-            onValueChange={(value) => updateFilter('type', (value || undefined) as CarType | undefined)}
+            value={filters.type || 'all'}
+            onValueChange={(value) => updateFilter('type', (value === 'all' ? undefined : value) as CarType | undefined)}
           >
             <SelectTrigger id="type">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               {carTypes.map((type) => (
                 <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
               ))}
@@ -75,14 +79,14 @@ export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: Se
         <div className="space-y-2">
           <Label htmlFor="fuel">Fuel Type</Label>
           <Select
-            value={filters.fuelType || ''}
-            onValueChange={(value) => updateFilter('fuelType', (value || undefined) as FuelType | undefined)}
+            value={filters.fuelType || 'all'}
+            onValueChange={(value) => updateFilter('fuelType', (value === 'all' ? undefined : value) as FuelType | undefined)}
           >
             <SelectTrigger id="fuel">
               <SelectValue placeholder="All Fuel Types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Fuel Types</SelectItem>
+              <SelectItem value="all">All Fuel Types</SelectItem>
               {fuelTypes.map((fuel) => (
                 <SelectItem key={fuel} value={fuel} className="capitalize">{fuel}</SelectItem>
               ))}
@@ -93,14 +97,14 @@ export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: Se
         <div className="space-y-2">
           <Label htmlFor="seats">Minimum Seats</Label>
           <Select
-            value={filters.seats?.toString() || ''}
-            onValueChange={(value) => updateFilter('seats', value ? parseInt(value) : undefined)}
+            value={filters.seats?.toString() || 'all'}
+            onValueChange={(value) => updateFilter('seats', value === 'all' ? undefined : parseInt(value))}
           >
             <SelectTrigger id="seats">
               <SelectValue placeholder="Any" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any</SelectItem>
+              <SelectItem value="all">Any</SelectItem>
               <SelectItem value="2">2+</SelectItem>
               <SelectItem value="4">4+</SelectItem>
               <SelectItem value="5">5+</SelectItem>
@@ -113,7 +117,7 @@ export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: Se
           <div className="flex items-center justify-between">
             <Label>Price Range</Label>
             <span className="text-sm text-muted-foreground">
-              ${filters.minPrice || 0} - ${filters.maxPrice || 600}
+              ₹{filters.minPrice || 0} - ₹{filters.maxPrice || 600}
             </span>
           </div>
           <Slider

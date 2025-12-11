@@ -29,8 +29,8 @@ export function CarCard({ car, className }: CarCardProps) {
           alt={`${car.brand} ${car.model}`}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        <Badge 
-          variant="outline" 
+        <Badge
+          variant="outline"
           className={cn("absolute top-3 right-3 capitalize", statusColors[car.status])}
         >
           {car.status}
@@ -45,7 +45,7 @@ export function CarCard({ car, className }: CarCardProps) {
           <p className="text-sm text-muted-foreground">{car.brand}</p>
           <h3 className="font-semibold text-lg">{car.model}</h3>
         </div>
-        
+
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <Users className="h-4 w-4" />
@@ -63,7 +63,7 @@ export function CarCard({ car, className }: CarCardProps) {
 
         <div className="flex items-center justify-between pt-2 border-t border-border/50">
           <div>
-            <span className="text-2xl font-bold">${car.pricePerDay}</span>
+            <span className="text-2xl font-bold">₹{car.pricePerDay}</span>
             <span className="text-sm text-muted-foreground">/day</span>
           </div>
           <Button variant="secondary" size="sm" asChild disabled={car.status !== 'available'}>

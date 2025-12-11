@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -8,29 +10,66 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { mockCars, mockAddons } from '@/data/mockData';
-import { 
-  Star, Users, Fuel, Gauge, Calendar as CalendarIcon, 
-  ChevronLeft, Check, Shield, Clock, ArrowRight 
+import {
+  Star, Users, Fuel, Gauge, Calendar as CalendarIcon,
+  ChevronLeft, Check, Shield, Clock, ArrowRight
 } from 'lucide-react';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
-import { Addon } from '@/types';
+import { Addon, Car as CarType } from '@/types';
 
 interface CarDetailPageProps {
   user?: { name: string; role: 'customer' | 'admin' } | null;
   onLogout?: () => void;
 }
 
+const mockAddons: Addon[] = [
+  { id: '1', name: 'GPS Navigation', price: 10, description: 'Built-in GPS navigation system' },
+  { id: '2', name: 'Child Seat', price: 15, description: 'Safety seat for children' },
+  { id: '3', name: 'Wait & Save', price: 50, description: 'Driver waits for you' },
+];
+
 export function CarDetailPage({ user, onLogout }: CarDetailPageProps) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const car = mockCars.find((c) => c.id === id);
 
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [selectedAddons, setSelectedAddons] = useState<Addon[]>([]);
+
+  // Fetch Car Details
+  const { data: car, isLoading } = useQuery({
+    queryKey: ['car', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cars')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      return {
+        ...data,
+        pricePerDay: data.price_per_day,
+        fuelType: data.fuel_type,
+        images: data.images || [],
+        features: data.features || []
+      } as CarType;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar user={user} onLogout={onLogout} />
+        <main className="flex-1 flex items-center justify-center">
+          <p>Loading car details...</p>
+        </main>
+      </div>
+    );
+  }
 
   if (!car) {
     return (
@@ -97,7 +136,7 @@ export function CarDetailPage({ user, onLogout }: CarDetailPageProps) {
     <div className="min-h-screen flex flex-col">
       <Navbar user={user} onLogout={onLogout} />
 
-      <main className="flex-1 py-8">
+      <main className="flex-1 py-8 pt-32">
         <div className="container">
           <Button variant="ghost" asChild className="mb-6">
             <Link to="/cars">
@@ -110,11 +149,15 @@ export function CarDetailPage({ user, onLogout }: CarDetailPageProps) {
             {/* Car Details */}
             <div className="lg:col-span-2 space-y-6">
               <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
-                <img
-                  src={car.images[0]}
-                  alt={`${car.brand} ${car.model}`}
-                  className="w-full h-full object-cover"
-                />
+                {car.images[0] ? (
+                  <img
+                    src={car.images[0]}
+                    alt={`${car.brand} ${car.model}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-200" />
+                )}
                 <Badge
                   className={cn(
                     "absolute top-4 right-4",
@@ -182,7 +225,7 @@ export function CarDetailPage({ user, onLogout }: CarDetailPageProps) {
                   <CardTitle className="flex items-center justify-between">
                     <span>Book This Car</span>
                     <span className="text-2xl">
-                      ${car.pricePerDay}
+                      ₹{car.pricePerDay}
                       <span className="text-sm text-muted-foreground font-normal">/day</span>
                     </span>
                   </CardTitle>
@@ -269,7 +312,7 @@ export function CarDetailPage({ user, onLogout }: CarDetailPageProps) {
                             <p className="text-xs text-muted-foreground">{addon.description}</p>
                           </div>
                         </div>
-                        <span className="text-sm font-medium">${addon.price}/day</span>
+                        <span className="text-sm font-medium">₹{addon.price}/day</span>
                       </div>
                     ))}
                   </div>
@@ -281,20 +324,20 @@ export function CarDetailPage({ user, onLogout }: CarDetailPageProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          ${car.pricePerDay} × {days} days
+                          ₹{car.pricePerDay} × {days} days
                         </span>
-                        <span>${subtotal}</span>
+                        <span>₹{subtotal}</span>
                       </div>
                       {addonsTotal > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Add-ons</span>
-                          <span>${addonsTotal}</span>
+                          <span>₹{addonsTotal}</span>
                         </div>
                       )}
                       <Separator />
                       <div className="flex justify-between font-semibold text-lg">
                         <span>Total</span>
-                        <span>${total}</span>
+                        <span>₹{total}</span>
                       </div>
                     </div>
                   )}
