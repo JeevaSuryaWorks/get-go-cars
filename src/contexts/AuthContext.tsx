@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { User as AppUser } from '@/types';
+import { CarLoader } from '@/components/CarLoader';
 
 interface AuthContextType {
     session: Session | null;
@@ -93,7 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider value={{ session, user, loading, signInWithGoogle, signOut }}>
-            {!loading && children}
+            {loading ? (
+                <div className="fixed inset-0 flex items-center justify-center bg-background">
+                    <CarLoader size="lg" label="Loading application..." />
+                </div>
+            ) : (
+                children
+            )}
         </AuthContext.Provider>
     );
 }

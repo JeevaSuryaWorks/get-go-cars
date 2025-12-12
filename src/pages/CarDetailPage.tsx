@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { CarLoader } from '@/components/CarLoader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Navbar } from '@/components/Navbar';
@@ -65,7 +66,7 @@ export function CarDetailPage({ user, onLogout }: CarDetailPageProps) {
       <div className="min-h-screen flex flex-col">
         <Navbar user={user} onLogout={onLogout} />
         <main className="flex-1 flex items-center justify-center">
-          <p>Loading car details...</p>
+          <CarLoader size="lg" label="Loading car details..." />
         </main>
       </div>
     );

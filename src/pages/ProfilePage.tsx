@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { CarLoader } from '@/components/CarLoader';
 import { supabase } from '@/lib/supabase';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -158,7 +159,7 @@ export function ProfilePage({ user, onLogout }: ProfilePageProps) {
             <div className="min-h-screen flex flex-col">
                 <Navbar user={user} onLogout={onLogout} />
                 <main className="flex-1 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <CarLoader size="lg" label="Loading profile..." />
                 </main>
                 <Footer />
             </div>

@@ -2,8 +2,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { verifyJsCorp } from "@/core/js-corp-lock";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import { CarsPage } from "./pages/CarsPage";
 import { CarDetailPage } from "./pages/CarDetailPage";
@@ -177,6 +179,9 @@ const AppRoutes = () => {
 };
 
 const App = () => {
+  // Runtime integrity verification
+  verifyJsCorp();
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -184,6 +189,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <AppRoutes />
           </BrowserRouter>
         </AuthProvider>

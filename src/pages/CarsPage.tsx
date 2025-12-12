@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CarLoader } from '@/components/CarLoader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Car } from '@/types';
@@ -106,7 +107,9 @@ export function CarsPage({ user, onLogout }: CarsPageProps) {
               </div>
 
               {isLoading ? (
-                <div className="text-center py-16">Loading cars...</div>
+                <div className="flex justify-center py-16">
+                  <CarLoader size="lg" label="Loading cars..." />
+                </div>
               ) : cars.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="text-lg font-medium mb-2">No cars found</p>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CarLoader } from '@/components/CarLoader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -93,8 +94,8 @@ export function AdminUsersPage({ user, onLogout }: AdminUsersPageProps) {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-8">
-                                            Loading users...
+                                        <TableCell colSpan={5} className="py-12">
+                                            <CarLoader size="md" label="Loading users..." className="mx-auto" />
                                         </TableCell>
                                     </TableRow>
                                 ) : filteredUsers.length === 0 ? (

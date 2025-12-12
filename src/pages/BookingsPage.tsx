@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
+import { CarLoader } from '@/components/CarLoader';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Navbar } from '@/components/Navbar';
@@ -150,7 +151,9 @@ export function BookingsPage({ user, onLogout }: BookingsPageProps) {
 
             <TabsContent value={activeTab} className="space-y-6">
               {isLoading ? (
-                <div className="py-16 text-center text-muted-foreground">Loading your bookings...</div>
+                <div className="py-16 flex justify-center">
+                  <CarLoader size="lg" label="Loading your bookings..." />
+                </div>
               ) : filteredBookings.length === 0 ? (
                 <Card>
                   <CardContent className="py-16 text-center">
