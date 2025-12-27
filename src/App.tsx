@@ -27,6 +27,8 @@ import { FaqPage } from "./pages/FaqPage";
 import { TermsPage } from "./pages/TermsPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { CancellationPolicyPage } from "./pages/CancellationPolicyPage";
+import { GuidePage } from "./pages/GuidePage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +60,16 @@ const AppRoutes = () => {
             <AuthPage />
           )
         }
+      />
+
+      <Route
+        path="/guide"
+        element={<GuidePage user={user} onLogout={signOut} />}
+      />
+
+      <Route
+        path="/forgot-password"
+        element={<ForgotPasswordPage />}
       />
 
       {/* Customer routes */}

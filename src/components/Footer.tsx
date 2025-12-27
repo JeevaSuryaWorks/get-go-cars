@@ -38,7 +38,17 @@ export function Footer({ className }: FooterProps) {
               <li><FooterLink to="/cars">Browse Fleet</FooterLink></li>
               <li><FooterLink to="/bookings">My Bookings</FooterLink></li>
               <li><FooterLink to="/auth">Login / Sign Up</FooterLink></li>
-              <li><FooterLink to="/about">About Us</FooterLink></li>
+              <li className="relative">
+                <FooterLink to="/guide">
+                  <span className="text-yellow-400 font-medium flex items-center gap-2">
+                    Guide & Team
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                    </span>
+                  </span>
+                </FooterLink>
+              </li>
             </ul>
           </div>
 
@@ -67,6 +77,10 @@ export function Footer({ className }: FooterProps) {
               </li>
               <li className="flex flex-col">
                 <span className="font-semibold text-white">Danial Raj A</span>
+                <span className="text-xs text-slate-500">Developer</span>
+              </li>
+              <li className="flex flex-col">
+                <span className="font-semibold text-white">Harinesh</span>
                 <span className="text-xs text-slate-500">Developer</span>
               </li>
             </ul>

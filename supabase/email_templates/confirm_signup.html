@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Signup</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background-color: #0f172a;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .logo {
+            color: #fbbf24;
+            font-size: 28px;
+            font-weight: 800;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: #ffffff;
+        }
+
+        .content {
+            padding: 40px;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            background-color: #d1fae5;
+            color: #059669;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .h1 {
+            margin: 0 0 16px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .p {
+            margin: 0 0 24px;
+            font-size: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #fbbf24;
+            color: #000000;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #f59e0b;
+        }
+
+        .footer {
+            background-color: #f8fafc;
+            padding: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .link {
+            color: #64748b;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">D <span>DriveYoo</span></div>
+        </div>
+        <div class="content">
+            <div class="badge">Welcome Aboard</div>
+            <h1 class="h1">Start Your Engine</h1>
+            <p class="p">Welcome to the DriveYoo community. To access our premium fleet and start your journey, please
+                confirm your email address.</p>
+
+            <div style="text-align: center; margin: 32px 0;">
+                <a href="{{ .ConfirmationURL }}" class="btn">Confirm Email</a>
+            </div>
+
+            <p class="p">Or copy and paste this link into your browser:</p>
+            <p><a href="{{ .ConfirmationURL }}" class="link">{{ .ConfirmationURL }}</a></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 DriveYoo Car Rental. All rights reserved.</p>
+            <p>Made with &hearts; in India</p>
+        </div>
+    </div>
+</body>
+
+</html>
