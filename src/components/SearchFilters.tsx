@@ -14,8 +14,20 @@ interface SearchFiltersProps {
 
 // Static data for filters
 const carBrands = ['Toyota', 'BMW', 'Mercedes', 'Audi', 'Tesla', 'Ford', 'Honda', 'Nissan'];
-const carTypes = ['Sedan', 'SUV', 'Luxury', 'Sports', 'Electric', 'Hybrid'];
-const fuelTypes = ['Gasoline', 'Diesel', 'Electric', 'Hybrid'];
+const carTypes = [
+  { label: 'Sedan', value: 'sedan' },
+  { label: 'SUV', value: 'suv' },
+  { label: 'Luxury', value: 'luxury' },
+  { label: 'Sports', value: 'sports' },
+  { label: 'Compact', value: 'compact' },
+  { label: 'Van', value: 'van' },
+];
+const fuelTypes = [
+  { label: 'Gasoline', value: 'petrol' },
+  { label: 'Diesel', value: 'diesel' },
+  { label: 'Electric', value: 'electric' },
+  { label: 'Hybrid', value: 'hybrid' },
+];
 
 export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: SearchFiltersProps) {
   const updateFilter = <K extends keyof SearchFilters>(key: K, value: SearchFilters[K]) => {
@@ -70,7 +82,7 @@ export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: Se
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               {carTypes.map((type) => (
-                <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
+                <SelectItem key={type.value} value={type.value} className="capitalize">{type.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -88,7 +100,7 @@ export function SearchFiltersComponent({ filters, onFiltersChange, onReset }: Se
             <SelectContent>
               <SelectItem value="all">All Fuel Types</SelectItem>
               {fuelTypes.map((fuel) => (
-                <SelectItem key={fuel} value={fuel} className="capitalize">{fuel}</SelectItem>
+                <SelectItem key={fuel.value} value={fuel.value} className="capitalize">{fuel.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>

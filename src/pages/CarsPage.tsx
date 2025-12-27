@@ -27,6 +27,7 @@ export function CarsPage({ user, onLogout }: CarsPageProps) {
       let query = supabase.from('cars').select('*')
         .neq('status', 'maintenance')
         .neq('status', 'unavailable')
+        .neq('status', 'rented')
         .neq('status', 'sold'); // Just in case we add sold later
 
       if (filters.brand) query = query.eq('brand', filters.brand);
