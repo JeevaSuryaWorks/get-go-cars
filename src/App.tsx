@@ -20,6 +20,8 @@ import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { AdminReportsPage } from "./pages/admin/AdminReportsPage";
 import { AdminCarForm } from "./pages/admin/AdminCarForm";
 import { AdminEditCarPage } from "./pages/admin/AdminEditCarPage";
+import { AdminIncidentsPage } from "./pages/admin/AdminIncidentsPage";
+import { AdminCarDetailsPage } from './pages/admin/AdminCarDetailsPage';
 import { ProfilePage } from "./pages/ProfilePage";
 import { HelpCenterPage } from "./pages/HelpCenterPage";
 import { ContactPage } from "./pages/ContactPage";
@@ -146,6 +148,16 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/admin/cars/:id/preview"
+        element={
+          user?.role === 'admin' ? (
+            <AdminCarDetailsPage user={user} onLogout={signOut} />
+          ) : (
+            <Navigate to="/auth" replace />
+          )
+        }
+      />
+      <Route
         path="/admin/bookings"
         element={
           user?.role === 'admin' ? (
@@ -160,6 +172,16 @@ const AppRoutes = () => {
         element={
           user?.role === 'admin' ? (
             <AdminUsersPage user={user} onLogout={signOut} />
+          ) : (
+            <Navigate to="/auth" replace />
+          )
+        }
+      />
+      <Route
+        path="/admin/incidents"
+        element={
+          user?.role === 'admin' ? (
+            <AdminIncidentsPage user={user} onLogout={signOut} />
           ) : (
             <Navigate to="/auth" replace />
           )

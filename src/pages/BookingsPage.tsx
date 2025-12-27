@@ -72,7 +72,8 @@ export function BookingsPage({ user, onLogout }: BookingsPageProps) {
           pricePerDay: booking.car.price_per_day,
           fuelType: booking.car.fuel_type,
           images: booking.car.images || [],
-          features: booking.car.features || []
+          features: booking.car.features || [],
+          registrationNumber: booking.car.registration_number
         },
         user: {
           name: user.user_metadata?.full_name || 'User',
@@ -115,9 +116,11 @@ export function BookingsPage({ user, onLogout }: BookingsPageProps) {
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else {
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(`Booking Ref: ${booking.id}`);
         toast({ title: "Copied to clipboard", description: "Booking reference copied." });
+      } else {
+        toast({ title: "Share not supported", description: "Your browser does not support sharing or clipboard access." });
       }
     } catch (err) {
       console.error('Error sharing:', err);
@@ -202,6 +205,11 @@ export function BookingsPage({ user, onLogout }: BookingsPageProps) {
                                   <h3 className="text-xl font-bold">
                                     {booking.car?.model}
                                   </h3>
+                                  {booking.car?.registrationNumber && (
+                                    <Badge variant="secondary" className="font-mono text-xs ml-2">
+                                      {booking.car.registrationNumber}
+                                    </Badge>
+                                  )}
                                   <Badge
                                     variant="outline"
                                     className={cn("capitalize ml-2", statusColors[booking.status])}
@@ -339,9 +347,9 @@ export function BookingsPage({ user, onLogout }: BookingsPageProps) {
             </TabsContent>
           </Tabs>
         </div>
-      </main>
+      </main >
 
       <Footer />
-    </div>
+    </div >
   );
 }

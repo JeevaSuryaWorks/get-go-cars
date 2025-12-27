@@ -43,36 +43,44 @@ export function CarCard({ car, className }: CarCardProps) {
       <CardContent className="p-4 space-y-4">
         <div>
           <p className="text-sm text-muted-foreground">{car.brand}</p>
-          <h3 className="font-semibold text-lg">{car.model}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-lg">{car.model}</h3>
+            {car.registrationNumber && (
+              <Badge variant="outline" className="font-mono text-[10px] h-5">
+                {car.registrationNumber}
+              </Badge>
+            )}
+          </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Users className="h-4 w-4" />
-            <span>{car.seats}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Fuel className="h-4 w-4" />
-            <span className="capitalize">{car.fuelType}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Gauge className="h-4 w-4" />
-            <span className="capitalize">{car.transmission}</span>
-          </div>
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <Users className="h-4 w-4" />
+          <span>{car.seats}</span>
         </div>
+        <div className="flex items-center gap-1.5">
+          <Fuel className="h-4 w-4" />
+          <span className="capitalize">{car.fuelType}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Gauge className="h-4 w-4" />
+          <span className="capitalize">{car.transmission}</span>
+        </div>
+      </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <div>
-            <span className="text-2xl font-bold">₹{car.pricePerDay}</span>
-            <span className="text-sm text-muted-foreground">/day</span>
-          </div>
-          <Button variant="secondary" size="sm" asChild disabled={car.status !== 'available'}>
-            <Link to={`/cars/${car.id}`}>
-              {car.status === 'available' ? 'Book Now' : 'View Details'}
-            </Link>
-          </Button>
+      <div className="flex items-center justify-between pt-2 border-t border-border/50">
+        <div>
+          <span className="text-2xl font-bold">₹{car.pricePerDay}</span>
+          <span className="text-sm text-muted-foreground">/day</span>
         </div>
-      </CardContent>
-    </Card>
+        <Button variant="secondary" size="sm" asChild disabled={car.status !== 'available'}>
+          <Link to={`/cars/${car.id}`}>
+            {car.status === 'available' ? 'Book Now' : 'View Details'}
+          </Link>
+        </Button>
+      </div>
+    </CardContent>
+    </Card >
   );
 }

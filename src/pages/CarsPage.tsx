@@ -24,7 +24,10 @@ export function CarsPage({ user, onLogout }: CarsPageProps) {
   const { data: cars = [], isLoading } = useQuery({
     queryKey: ['cars', filters],
     queryFn: async () => {
-      let query = supabase.from('cars').select('*');
+      let query = supabase.from('cars').select('*')
+        .neq('status', 'maintenance')
+        .neq('status', 'unavailable')
+        .neq('status', 'sold'); // Just in case we add sold later
 
       if (filters.brand) query = query.eq('brand', filters.brand);
       if (filters.type) query = query.eq('type', filters.type);
@@ -50,6 +53,7 @@ export function CarsPage({ user, onLogout }: CarsPageProps) {
         features: car.features || [],
         images: car.images || [],
         rating: Number(car.rating || 0),
+        registrationNumber: car.registration_number,
         id: car.id
       })) as Car[];
     }

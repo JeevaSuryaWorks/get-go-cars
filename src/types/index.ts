@@ -11,10 +11,11 @@ export interface User {
 
 export type CarType = 'sedan' | 'suv' | 'sports' | 'luxury' | 'compact' | 'van';
 export type FuelType = 'petrol' | 'diesel' | 'electric' | 'hybrid';
-export type CarStatus = 'available' | 'rented' | 'maintenance';
+export type CarStatus = 'available' | 'rented' | 'maintenance' | 'unavailable';
 
 export interface Car {
   id: string;
+  registrationNumber?: string;
   brand: string;
   model: string;
   type: CarType;

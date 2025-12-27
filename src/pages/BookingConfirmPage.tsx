@@ -18,7 +18,7 @@ import {
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { Car, Addon } from '@/types';
-import QRCode from 'react-qr-code';
+
 
 interface BookingConfirmPageProps {
   user?: { name: string; role: 'customer' | 'admin' } | null;
@@ -46,9 +46,9 @@ export function BookingConfirmPage({ user, onLogout }: BookingConfirmPageProps) 
 
   // Expanded Billing State
   const [billingInfo, setBillingInfo] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
+    fullName: user?.name || '',
+    email: (user as any)?.email || '',
+    phone: '+91 ',
     dob: '',
     licenseNumber: '',
     city: '',
@@ -118,6 +118,39 @@ export function BookingConfirmPage({ user, onLogout }: BookingConfirmPageProps) 
       return;
     }
 
+    // Validation
+    if (!billingInfo.dob) {
+      toast({ title: "Missing DOB", description: "Please enter your Date of Birth.", variant: "destructive" });
+      return;
+    }
+    const dobDate = new Date(billingInfo.dob);
+    const today = new Date();
+    let age = today.getFullYear() - dobDate.getFullYear();
+    const m = today.getMonth() - dobDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+      age--;
+    }
+
+    if (age < 18) {
+      toast({ title: "Age Restriction", description: "You must be at least 18 years old to book a car.", variant: "destructive" });
+      return;
+    }
+
+    if (billingInfo.idType === 'aadhaar') {
+      const aadhaarClean = billingInfo.idNumber.replace(/\s/g, '');
+      if (!/^\d{12}$/.test(aadhaarClean)) {
+        toast({ title: "Invalid Aadhaar", description: "Aadhaar number must be exactly 12 digits.", variant: "destructive" });
+        return;
+      }
+    }
+
+    if (billingInfo.idType === 'pan') {
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(billingInfo.idNumber)) {
+        toast({ title: "Invalid PAN", description: "Please enter a valid PAN Number (e.g., ABCDE1234F).", variant: "destructive" });
+        return;
+      }
+    }
+
     if (!user) {
       toast({
         title: "Error",
@@ -140,7 +173,8 @@ export function BookingConfirmPage({ user, onLogout }: BookingConfirmPageProps) 
           end_date: endDate.toISOString(),
           total_price: finalTotal,
           status: 'pending',
-          addons: addons // storing addons as JSON
+          addons: addons,
+          billing_info: billingInfo // Saving captured KYC data
         })
         .select() // select to get the ID
         .single();
@@ -340,8 +374,13 @@ export function BookingConfirmPage({ user, onLogout }: BookingConfirmPageProps) 
                         <Input
                           id="id-num"
                           placeholder={billingInfo.idType === 'aadhaar' ? 'XXXX XXXX XXXX' : 'ABCDE1234F'}
+                          maxLength={billingInfo.idType === 'aadhaar' ? 12 : 10}
                           value={billingInfo.idNumber}
-                          onChange={(e) => setBillingInfo({ ...billingInfo, idNumber: e.target.value })}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (billingInfo.idType === 'aadhaar' && !/^\d*$/.test(val)) return; // Only numbers for Aadhaar
+                            setBillingInfo({ ...billingInfo, idNumber: val.toUpperCase() });
+                          }}
                         />
                       </div>
                       <div className="space-y-2">
@@ -433,7 +472,8 @@ export function BookingConfirmPage({ user, onLogout }: BookingConfirmPageProps) 
                         {paymentMethod === 'upi' && (
                           <div className="mt-3 bg-white p-4 rounded border flex flex-col items-center animate-in fade-in slide-in-from-top-2">
                             <p className="text-xs font-semibold text-center mb-2 uppercase tracking-wide">Scan to Pay ₹{finalTotal.toFixed(2)}</p>
-                            <QRCode value={`upi://pay?pa=jsrental@upi&pn=JS Corp&am=${finalTotal.toFixed(2)}&cu=INR`} size={150} />
+                            <img src="/qr-js.jpeg" alt="Pay with UPI" className="w-[220px] h-auto rounded-lg shadow-sm border" />
+
                             <div className="flex gap-4 mt-4 opacity-70">
                               <Smartphone className="h-4 w-4" />
                               <span className="text-xs">Supported by all UPI apps</span>

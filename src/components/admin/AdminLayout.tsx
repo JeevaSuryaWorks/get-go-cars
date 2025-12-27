@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
     Car, LogOut, LayoutDashboard,
-    CarFront, ClipboardList, UserCog, BarChart3, Menu, X
+    CarFront, ClipboardList, UserCog, BarChart3, Menu, X, ShieldAlert
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +36,7 @@ export function AdminLayout({ children, title, subtitle, actions, user, onLogout
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
         { icon: CarFront, label: 'Cars', path: '/admin/cars' },
         { icon: ClipboardList, label: 'Bookings', path: '/admin/bookings' },
+        { icon: ShieldAlert, label: 'Security', path: '/admin/incidents' },
         { icon: UserCog, label: 'Users', path: '/admin/users' },
         { icon: BarChart3, label: 'Reports', path: '/admin/reports' },
     ];
@@ -55,22 +56,22 @@ export function AdminLayout({ children, title, subtitle, actions, user, onLogout
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-50 flex flex-col bg-slate-900 text-white transition-all duration-300 shadow-2xl",
+                    "fixed inset-y-0 left-0 z-50 flex flex-col bg-gradient-to-b from-slate-950 to-slate-900 text-white transition-all duration-300 shadow-2xl border-r border-slate-800",
                     sidebarOpen ? "w-64" : "w-0 lg:w-20 -translate-x-full lg:translate-x-0"
                 )}
             >
-                <div className="flex h-16 items-center justify-between px-4 border-b border-white/10 bg-slate-950/50 backdrop-blur-xl">
-                    <Link to="/admin" className={cn("flex items-center gap-2 font-bold text-lg", !sidebarOpen && "lg:justify-center w-full")}>
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/20 ring-1 ring-primary/50 text-primary shrink-0">
+                <div className="flex h-16 items-center justify-between px-4 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
+                    <Link to="/admin" className={cn("flex items-center gap-3 font-bold text-lg", !sidebarOpen && "lg:justify-center w-full")}>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20 text-white shrink-0">
                             <Car className="h-5 w-5" />
                         </div>
-                        {sidebarOpen && <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">DriveYoo</span>}
+                        {sidebarOpen && <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">DriveYoo</span>}
                     </Link>
                     {sidebarOpen && isMobile && (
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="text-white/70 hover:text-white"
+                            className="text-white/50 hover:text-white hover:bg-white/5"
                             onClick={() => setSidebarOpen(false)}
                         >
                             <X className="h-5 w-5" />
@@ -78,39 +79,49 @@ export function AdminLayout({ children, title, subtitle, actions, user, onLogout
                     )}
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    {sidebarLinks.map((link) => (
-                        <Link
-                            key={link.path}
-                            to={link.path}
-                            className={cn(
-                                "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group relative overflow-hidden",
-                                isActive(link.path)
-                                    ? "bg-primary text-white shadow-lg shadow-primary/25"
-                                    : "text-white/60 hover:text-white hover:bg-white/5",
-                                !sidebarOpen && "lg:justify-center lg:px-2"
-                            )}
-                            title={!sidebarOpen ? link.label : undefined}
-                        >
-                            <link.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", isActive(link.path) && "animate-pulse-slow")} />
-                            {sidebarOpen && <span className="font-medium">{link.label}</span>}
-                            {isActive(link.path) && !sidebarOpen && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
-                            )}
-                        </Link>
-                    ))}
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
+                    {sidebarLinks.map((link) => {
+                        const active = isActive(link.path);
+                        return (
+                            <Link
+                                key={link.path}
+                                to={link.path}
+                                className={cn(
+                                    "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
+                                    active
+                                        ? "bg-indigo-600/10 text-indigo-400"
+                                        : "text-slate-400 hover:text-slate-100 hover:bg-white/5",
+                                    !sidebarOpen && "lg:justify-center lg:px-2"
+                                )}
+                                title={!sidebarOpen ? link.label : undefined}
+                            >
+                                <link.icon className={cn(
+                                    "h-5 w-5 shrink-0 transition-all duration-300",
+                                    active ? "text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" : "group-hover:scale-110"
+                                )} />
+                                {sidebarOpen && <span className="font-medium tracking-wide text-sm">{link.label}</span>}
+
+                                {active && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 to-transparent pointer-events-none" />
+                                )}
+                                {active && !sidebarOpen && (
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-500 rounded-r-full shadow-[0_0_10px_rgba(99,102,241,0.6)]" />
+                                )}
+                            </Link>
+                        );
+                    })}
                 </nav>
 
-                <div className="p-4 border-t border-white/10 bg-slate-950/30">
+                <div className="p-4 border-t border-white/5 bg-slate-950/30">
                     <Button
                         variant="ghost"
                         className={cn(
-                            "w-full text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors",
+                            "w-full text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 group",
                             sidebarOpen ? "justify-start" : "justify-center px-0"
                         )}
                         onClick={onLogout}
                     >
-                        <LogOut className={cn("h-5 w-5", sidebarOpen && "mr-3")} />
+                        <LogOut className={cn("h-5 w-5 transition-transform group-hover:-translate-x-1", sidebarOpen && "mr-3")} />
                         {sidebarOpen && <span>Logout</span>}
                     </Button>
                 </div>
