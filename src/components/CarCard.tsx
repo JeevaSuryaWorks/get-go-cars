@@ -52,35 +52,35 @@ export function CarCard({ car, className }: CarCardProps) {
             )}
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <div className="flex items-center gap-1.5">
-          <Users className="h-4 w-4" />
-          <span>{car.seats}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Fuel className="h-4 w-4" />
-          <span className="capitalize">{car.fuelType}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Gauge className="h-4 w-4" />
-          <span className="capitalize">{car.transmission}</span>
-        </div>
-      </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-border/50">
-        <div>
-          <span className="text-2xl font-bold">₹{car.pricePerDay}</span>
-          <span className="text-sm text-muted-foreground">/day</span>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Users className="h-4 w-4" />
+            <span>{car.seats}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Fuel className="h-4 w-4" />
+            <span className="capitalize">{car.fuelType}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Gauge className="h-4 w-4" />
+            <span className="capitalize">{car.transmission}</span>
+          </div>
         </div>
-        <Button variant="secondary" size="sm" asChild disabled={car.status !== 'available'}>
-          <Link to={`/cars/${car.id}`}>
-            {car.status === 'available' ? 'Book Now' : 'View Details'}
-          </Link>
-        </Button>
-      </div>
-    </CardContent>
+
+        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+          <div>
+            <span className="text-2xl font-bold">₹{car.pricePerDay}</span>
+            <span className="text-sm text-muted-foreground">/day</span>
+          </div>
+          <Button variant="secondary" size="sm" asChild disabled={car.status !== 'available'}>
+            <Link to={`/cars/${car.id}`}>
+              {car.status === 'available' ? 'Book Now' : 'View Details'}
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
     </Card >
   );
 }
